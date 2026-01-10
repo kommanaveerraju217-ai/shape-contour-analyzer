@@ -1,88 +1,66 @@
 import streamlit as st
-import cv2
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
+from skimage.color import rgb2gray
+from skimage import measure
 
 st.set_page_config(page_title="Shape & Contour Analyzer", layout="wide")
 st.title("🔷 Shape & Contour Analyzer")
-
-# ---------- Helper function to calculate side lengths ----------
-def side_lengths(pts):
-    lengths = []
-    for i in range(4):
-        p1 = pts[i][0]
-        p2 = pts[(i + 1) % 4][0]
-        length = np.linalg.norm(p1 - p2)
-        lengths.append(length)
-    return lengths
 
 # ---------- Upload image ----------
 uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+    # Read image
+    image = Image.open(uploaded_file).convert("RGB")
     image_np = np.array(image)
 
     # ---------- Preprocessing ----------
-    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
-    edges = cv2.Canny(blur, 50, 150)
+    gray = rgb2gray(image_np)
+    binary = gray < 0.8   # threshold
 
     # ---------- Find contours ----------
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = measure.find_contours(binary, 0.8)
 
-    output = image_np.copy()
+    output = image.copy()
+    draw = ImageDraw.Draw(output)
+
     shape_count = 0
-
     st.subheader("📊 Detected Shapes Details")
 
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-
-        # Ignore small noise
-        if area < 500:
+    for contour in contours:
+        if len(contour) < 60:   # remove noise
             continue
 
         shape_count += 1
-        perimeter = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.04 * perimeter, True)
-        vertices = len(approx)
 
-        # ---------- Shape Detection ----------
-        if vertices == 3:
-            shape = "Triangle"
+        # ---------- Feature Extraction ----------
+        area = len(contour)
 
-        elif vertices == 4:
-            sides = side_lengths(approx)
-            tolerance = 10
+        perimeter = np.sum(
+            np.sqrt(np.sum(np.diff(contour, axis=0) ** 2, axis=1))
+        )
 
-            if (abs(sides[0] - sides[1]) < tolerance and
-                abs(sides[1] - sides[2]) < tolerance and
-                abs(sides[2] - sides[3]) < tolerance):
-                shape = "Square"
-
-            elif (abs(sides[0] - sides[2]) < tolerance and
-                  abs(sides[1] - sides[3]) < tolerance):
-                shape = "Rectangle"
-
-            else:
-                shape = "Quadrilateral"
-
-        elif vertices > 4:
+        # ---------- Shape Detection (Approximate) ----------
+        if area < 400:
+            shape = "Triangle / Small Shape"
+        elif area < 900:
+            shape = "Quadrilateral"
+        else:
             shape = "Circle"
 
-        else:
-            shape = "Unknown"
+        # ---------- Draw Bounding Box ----------
+        y_coords = contour[:, 0]
+        x_coords = contour[:, 1]
+        min_x, max_x = int(min(x_coords)), int(max(x_coords))
+        min_y, max_y = int(min(y_coords)), int(max(y_coords))
 
-        # ---------- Draw contour & label ----------
-        cv2.drawContours(output, [cnt], -1, (0, 255, 0), 2)
-        x, y, w, h = cv2.boundingRect(cnt)
-        cv2.putText(output, shape, (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+        draw.rectangle([min_x, min_y, max_x, max_y], outline="green", width=2)
+        draw.text((min_x, min_y - 10), shape, fill="red")
 
         # ---------- Display info ----------
         st.write(f"**Shape {shape_count}: {shape}**")
-        st.write(f"Area: {int(area)} pixels")
+        st.write(f"Area: {area} pixels")
         st.write(f"Perimeter: {int(perimeter)} pixels")
         st.write("---")
 
