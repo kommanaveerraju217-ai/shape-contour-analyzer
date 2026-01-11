@@ -36,6 +36,9 @@ Dashboard
 2.Original vs Processed: Compare the raw input with the detected contours.
 
 3.Metrics: View total object count and a data table with:
+
 Shape Type (Triangle, Square, Rectangle, Circle, Polygon)
+
 Area (px)
+
 Perimeter (px)
