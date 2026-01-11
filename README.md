@@ -12,10 +12,10 @@ This project automates the process of detecting shapes, counting objects, and ex
 4. Build an interactive dashboard using Streamlit
 
 ****How to Run****
-```Install Dependencies (if not already installed):
-pip install streamlit opencv-python-headless numpy pandas pillow
-```Run the App:
-      streamlit run app.py
+###Install Dependencies (if not already installed):
+```pip install streamlit opencv-python-headless numpy pandas pillow
+###Run the App:
+```streamlit run app.py
 
 
 Open in Browser: The app will usually open automatically at http://localhost:8501.
