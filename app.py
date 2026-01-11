@@ -1,76 +1,100 @@
 import streamlit as st
+import cv2
 import numpy as np
-from PIL import Image, ImageDraw
-from skimage.color import rgb2gray
-from skimage import measure
+from PIL import Image
 
+# ------------------ Page Config ------------------
 st.set_page_config(page_title="Shape & Contour Analyzer", layout="wide")
 st.title("🔷 Shape & Contour Analyzer")
 
-# ---------- Upload image ----------
-uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "png", "jpeg"])
+st.write("""
+This application detects **geometric shapes**, counts objects,
+and displays **area & perimeter** using **contour-based feature extraction**.
+""")
+
+# ------------------ Upload Image ------------------
+uploaded_file = st.file_uploader("📤 Upload an Image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
     # Read image
-    image = Image.open(uploaded_file).convert("RGB")
-    image_np = np.array(image)
+    image = Image.open(uploaded_file)
+    img = np.array(image)
 
-    # ---------- Preprocessing ----------
-    gray = rgb2gray(image_np)
-    binary = gray < 0.8   # threshold
+    # Convert to OpenCV BGR
+    img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-    # ---------- Find contours ----------
-    contours = measure.find_contours(binary, 0.8)
+    # ------------------ Preprocessing ------------------
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    edges = cv2.Canny(blur, 50, 150)
 
-    output = image.copy()
-    draw = ImageDraw.Draw(output)
+    # ------------------ Find Contours ------------------
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     shape_count = 0
-    st.subheader("📊 Detected Shapes Details")
+    results = []
 
-    for contour in contours:
-        if len(contour) < 60:   # remove noise
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area < 500:  # Ignore noise
             continue
+
+        perimeter = cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, 0.04 * perimeter, True)
+
+        shape_name = "Unknown"
+
+        if len(approx) == 3:
+            shape_name = "Triangle"
+        elif len(approx) == 4:
+            x, y, w, h = cv2.boundingRect(approx)
+            aspect_ratio = w / float(h)
+            if 0.95 <= aspect_ratio <= 1.05:
+                shape_name = "Square"
+            else:
+                shape_name = "Rectangle"
+        elif len(approx) > 4:
+            shape_name = "Circle"
 
         shape_count += 1
 
-        # ---------- Feature Extraction ----------
-        area = len(contour)
-
-        perimeter = np.sum(
-            np.sqrt(np.sum(np.diff(contour, axis=0) ** 2, axis=1))
+        # Draw contour and label
+        cv2.drawContours(img_bgr, [approx], -1, (0, 255, 0), 2)
+        x, y = approx[0][0]
+        cv2.putText(
+            img_bgr,
+            shape_name,
+            (x, y - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (255, 0, 0),
+            2
         )
 
-        # ---------- Shape Detection (Approximate) ----------
-        if area < 400:
-            shape = "Triangle / Small Shape"
-        elif area < 900:
-            shape = "Quadrilateral"
-        else:
-            shape = "Circle"
+        results.append({
+            "Shape": shape_name,
+            "Area": round(area, 2),
+            "Perimeter": round(perimeter, 2)
+        })
 
-        # ---------- Draw Bounding Box ----------
-        y_coords = contour[:, 0]
-        x_coords = contour[:, 1]
-        min_x, max_x = int(min(x_coords)), int(max(x_coords))
-        min_y, max_y = int(min(y_coords)), int(max(y_coords))
+    # Convert back to RGB
+    final_img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-        draw.rectangle([min_x, min_y, max_x, max_y], outline="green", width=2)
-        draw.text((min_x, min_y - 10), shape, fill="red")
-
-        # ---------- Display info ----------
-        st.write(f"**Shape {shape_count}: {shape}**")
-        st.write(f"Area: {area} pixels")
-        st.write(f"Perimeter: {int(perimeter)} pixels")
-        st.write("---")
-
-    # ---------- Display Images ----------
+    # ------------------ Display ------------------
     col1, col2 = st.columns(2)
 
     with col1:
-        st.image(image, caption="Original Image", use_column_width=True)
+        st.subheader("📸 Original Image")
+        st.image(image, use_container_width=True)
 
     with col2:
-        st.image(output, caption="Processed Image", use_column_width=True)
+        st.subheader("🧠 Detected Shapes")
+        st.image(final_img, use_container_width=True)
 
-    st.success(f"✅ Total Shapes Detected: {shape_count}")
+    st.success(f"🔢 Total Objects Detected: {shape_count}")
+
+    st.subheader("📊 Shape Details")
+    st.table(results)
+
+else:
+    st.info("Please upload an image to start analysis.")
