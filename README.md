@@ -7,8 +7,11 @@ This project automates the process of detecting shapes, counting objects, and ex
 
 ****Objectives****
 1. Detect common geometric shapes (Triangle, Square, Rectangle, Circle)
-2. Count the number of objects in an image
+
+2. Count the number of objects in an image.
+
 3. Calculate area and perimeter of each detected object
+
 4. Build an interactive dashboard using Streamlit
 
 ****How to Run****
@@ -26,10 +29,12 @@ streamlit run app.py
 Open in Browser: The app will usually open automatically at http://localhost:8501.
 
 ****Features****
-\n
-Dashboard \n
-1.Upload Image: Supports JPG, PNG.\n
-2.Original vs Processed: Compare the raw input with the detected contours.\n
+
+Dashboard 
+1.Upload Image: Supports JPG, PNG.
+
+2.Original vs Processed: Compare the raw input with the detected contours.
+
 3.Metrics: View total object count and a data table with:
 Shape Type (Triangle, Square, Rectangle, Circle, Polygon)
 Area (px)
