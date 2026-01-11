@@ -43,3 +43,15 @@ Shape Type (Triangle, Square, Rectangle, Circle, Polygon)
 Area (px)
 
 Perimeter (px)
+
+****Technologies Used****
+
+Python
+
+Streamlit – Web application framework
+
+OpenCV – Image processing & contour detection
+
+NumPy – Numerical operations
+
+Pillow (PIL) – Image handling
