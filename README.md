@@ -31,6 +31,7 @@ Open in Browser: The app will usually open automatically at http://localhost:850
 ****Features****
 
 Dashboard 
+
 1.Upload Image: Supports JPG, PNG.
 
 2.Original vs Processed: Compare the raw input with the detected contours.
