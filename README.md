@@ -22,7 +22,7 @@ Run the App:
 ```
 streamlit run app.py
 
-'''
+```
 Open in Browser: The app will usually open automatically at http://localhost:8501.
 
 ###Features
