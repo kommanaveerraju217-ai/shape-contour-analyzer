@@ -25,11 +25,11 @@ streamlit run app.py
 ```
 Open in Browser: The app will usually open automatically at http://localhost:8501.
 
-###Features
-###Dashboard
-Upload Image: Supports JPG, PNG.
-Original vs Processed: Compare the raw input with the detected contours.
-Metrics: View total object count and a data table with:
+****Features****
+Dashboard
+1.Upload Image: Supports JPG, PNG.
+2.Original vs Processed: Compare the raw input with the detected contours.
+3.Metrics: View total object count and a data table with:
 Shape Type (Triangle, Square, Rectangle, Circle, Polygon)
 Area (px)
 Perimeter (px)
