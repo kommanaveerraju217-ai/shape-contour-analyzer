@@ -17,6 +17,7 @@ Install Dependencies (if not already installed):
 ```
 pip install streamlit opencv-python-headless numpy pandas pillow
 
+
 Run the App:
 ```
 streamlit run app.py
