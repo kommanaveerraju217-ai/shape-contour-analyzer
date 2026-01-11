@@ -15,10 +15,9 @@ This project automates the process of detecting shapes, counting objects, and ex
 ###Install Dependencies (if not already installed):
 
 ```pip install streamlit opencv-python-headless numpy pandas pillow
-```
+
 ###Run the App:
 ```streamlit run app.py
-```
 Open in Browser: The app will usually open automatically at http://localhost:8501.
 
 ###Features
